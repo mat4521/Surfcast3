@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1628">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SurfCast">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>SurfCast — South Shore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ocean-deep: #0a1628;
+  --ocean-mid: #0d2444;
+  --ocean-surface: #112d52;
+  --ocean-light: #1a4a7a;
+  --wave: #1a8cff;
+  --wave-dim: #0d5fa3;
+  --gold: #e8c870;
+  --gold-dim: #a8904e;
+  --foam: #c8dff5;
+  --foam-dim: #7aa8d0;
+  --text: #e8f0f8;
+  --text-muted: #7aa8d0;
+  --text-dim: #4a7096;
+  --high: #4ab8ff;
+  --low: #e8a030;
+  --good: #3dba7a;
+  --fair: #e8a030;
+  --danger: #e85040;
+  --card-bg: rgba(13,36,68,0.85);
+  --card-border: rgba(26,140,255,0.15);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  min-height: 100vh;
+  background: var(--ocean-deep);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Animated ocean background */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 120% 60% at 50% 100%, rgba(26,140,255,0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 20% 80%, rgba(13,95,163,0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #050e1a 0%, #0a1628 40%, #0d2444 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Subtle wave lines in background */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 48px,
+      rgba(26,140,255,0.03) 48px,
+      rgba(26,140,255,0.03) 49px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 430px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 24px);
+  padding-top: max(env(safe-area-inset-top), 16px);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 8px 0 20px;
+}
+.header-left {}
+.header-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px;
+  font-weight: 300;
+  font-style: italic;
+  color: var(--text);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.header-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.clock-block { text-align: right; }
+#clock { font-size: 24px; font-weight: 500; color: var(--text); letter-spacing: 0.04em; }
+#dateline { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; margin-top: 2px; }
+
+/* Cards */
+.card {
+  background: var(--card-bg);
+  border: 0.5px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.card-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* Badges */
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.b-blue { background: rgba(26,140,255,0.15); color: var(--high); border: 0.5px solid rgba(26,140,255,0.3); }
+.b-green { background: rgba(61,186,122,0.15); color: var(--good); border: 0.5px solid rgba(61,186,122,0.3); }
+.b-amber { background: rgba(232,160,48,0.15); color: var(--fair); border: 0.5px solid rgba(232,160,48,0.3); }
+.b-red { background: rgba(232,80,64,0.15); color: var(--danger); border: 0.5px solid rgba(232,80,64,0.3); }
+.b-teal { background: rgba(26,200,180,0.12); color: #1ac8b4; border: 0.5px solid rgba(26,200,180,0.25); }
+.b-gold { background: rgba(232,200,112,0.12); color: var(--gold); border: 0.5px solid rgba(232,200,112,0.25); }
+
+/* Weather */
+.weather-main { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.weather-icon { font-size: 44px; line-height: 1; }
+.weather-temp { font-family: 'Fraunces', serif; font-size: 42px; font-weight: 300; color: var(--text); }
+.weather-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.weather-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.weather-forecast { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--card-border); }
+.wf-cell { text-align: center; }
+.wf-day { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.wf-icon { font-size: 18px; margin-bottom: 3px; }
+.wf-temp { font-size: 13px; font-weight: 500; }
+
+/* Surf */
+.surf-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 14px; }
+.surf-stat { background: rgba(10,22,40,0.6); border: 0.5px solid var(--card-border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; }
+.surf-stat-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: var(--text); line-height: 1; }
+.surf-stat-unit { font-size: 10px; color: var(--text-muted); }
+.surf-stat-lbl { font-size: 9px; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+.surf-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid rgba(26,140,255,0.08); font-size: 12px; }
+.surf-row:last-child { border-bottom: none; }
+.surf-row-label { color: var(--text-muted); flex: 1; }
+.surf-row-val { color: var(--text); }
+.swell-forecast { margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--card-border); }
+.swell-day { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 0.5px solid rgba(26,140,255,0.08); font-size: 12px; }
+.swell-day:last-child { border-bottom: none; }
+.swell-day-name { color: var(--text-dim); width: 56px; flex-shrink: 0; }
+.swell-day-desc { color: var(--text-muted); flex: 1; font-size: 11px; }
+.water-tip { margin-top: 12px; padding: 10px 12px; background: rgba(26,140,255,0.06); border: 0.5px solid rgba(26,140,255,0.12); border-radius: var(--radius-sm); font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+
+/* Tides */
+.inlet-block + .inlet-block { margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--card-border); }
+.inlet-name { font-size: 12px; font-weight: 500; color: var(--foam); letter-spacing: 0.04em; margin-bottom: 8px; }
+.tide-entry { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 0.5px solid rgba(26,140,255,0.08); font-size: 12px; }
+.tide-entry:last-child { border-bottom: none; }
+.tide-arrow { font-size: 16px; width: 18px; flex-shrink: 0; }
+.tide-dir-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; width: 32px; }
+.tide-dir-label.h { color: var(--high); }
+.tide-dir-label.l { color: var(--low); }
+.tide-time-val { font-weight: 500; color: var(--text); }
+.tide-ht-val { color: var(--text-dim); font-size: 11px; margin-left: auto; }
+.sunrise-row { margin-top: 8px; font-size: 11px; color: var(--text-dim); display: flex; gap: 12px; }
+
+/* Moon */
+.moon-main { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.moon-phase-name { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 300; font-style: italic; color: var(--text); }
+.moon-illum { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+.moon-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.moon-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; margin: 14px 0; padding: 12px; background: rgba(10,22,40,0.4); border-radius: var(--radius-sm); border: 0.5px solid var(--card-border); }
+.moon-day { text-align: center; }
+.moon-day .md { font-size: 9px; color: var(--text-dim); margin-bottom: 2px; }
+.moon-day .ms { font-size: 14px; line-height: 1; }
+.moon-day.today .md { color: var(--gold); font-weight: 500; }
+.moon-day.today .ms { font-size: 18px; }
+.upcoming { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; }
+.up-item { text-align: center; background: rgba(10,22,40,0.4); border-radius: var(--radius-sm); padding: 10px 4px; border: 0.5px solid var(--card-border); }
+.up-icon { font-size: 22px; }
+.up-label { font-size: 9px; color: var(--text-dim); margin-top: 3px; letter-spacing: 0.04em; }
+.up-date { font-size: 11px; color: var(--text); font-weight: 500; margin-top: 2px; }
+.moon-tip { margin-top: 12px; font-size: 11px; color: var(--text-dim); padding-top: 12px; border-top: 0.5px solid var(--card-border); }
+
+/* Todo */
+.todo-input { width: 100%; background: rgba(10,22,40,0.6); border: 0.5px solid rgba(26,140,255,0.2); border-radius: var(--radius-sm); padding: 9px 12px; font-size: 13px; font-family: 'DM Mono', monospace; color: var(--text); outline: none; }
+.todo-input::placeholder { color: var(--text-dim); }
+.todo-input:focus { border-color: rgba(26,140,255,0.5); }
+.todo-list { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.todo-item { display: flex; align-items: center; gap: 10px; font-size: 13px; padding: 6px 8px; border-radius: 8px; transition: background 0.15s; }
+.todo-item:hover { background: rgba(26,140,255,0.05); }
+.todo-item input[type="checkbox"] { accent-color: var(--wave); width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
+.todo-item.done span { text-decoration: line-through; color: var(--text-dim); }
+.todo-item span { color: var(--text-muted); }
+.todo-add { margin-top: 8px; font-size: 11px; color: var(--text-dim); cursor: pointer; background: none; border: none; font-family: 'DM Mono', monospace; letter-spacing: 0.04em; }
+
+/* Budget */
+.budget-entry { margin-bottom: 10px; }
+.budget-entry:last-child { margin-bottom: 0; }
+.budget-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; }
+.budget-name { color: var(--text-muted); }
+.budget-amt { color: var(--text); }
+.budget-bar-bg { height: 4px; background: rgba(26,140,255,0.1); border-radius: 2px; overflow: hidden; }
+.budget-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.budget-total { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; padding-top: 12px; border-top: 0.5px solid var(--card-border); font-size: 12px; }
+.budget-total-label { color: var(--text-dim); letter-spacing: 0.06em; }
+.budget-total-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; color: var(--text); }
+
+/* News */
+.news-item { padding: 9px 0; border-bottom: 0.5px solid rgba(26,140,255,0.08); }
+.news-item:last-child { border-bottom: none; padding-bottom: 0; }
+.news-title { font-size: 13px; color: var(--text); line-height: 1.5; }
+.news-meta { font-size: 10px; color: var(--text-dim); margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+.news-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.news-btn { font-size: 11px; font-family: 'DM Mono', monospace; background: none; border: 0.5px solid rgba(26,140,255,0.25); border-radius: 20px; padding: 4px 12px; cursor: pointer; color: var(--text-muted); }
+.news-btn:hover { border-color: var(--wave); color: var(--wave); }
+
+/* Section divider label */
+.section-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 6px 0 8px 2px;
+}
+
+/* Install banner */
+#install-banner {
+  display: none;
+  background: rgba(26,140,255,0.1);
+  border: 0.5px solid rgba(26,140,255,0.3);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+#install-banner button {
+  background: var(--wave);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+/* iOS install tip */
+#ios-tip {
+  display: none;
+  font-size: 11px;
+  color: var(--text-dim);
+  background: rgba(26,140,255,0.06);
+  border: 0.5px solid rgba(26,140,255,0.15);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- iOS install tip -->
+  <div id="ios-tip"></div>
+  <!-- Android install banner -->
+  <div id="install-banner">
+    <span>Add SurfCast to your home screen</span>
+    <button id="install-btn">Install</button>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">SurfCast</div>
+      <div class="header-sub">Western South Shore · Long Island</div>
+    </div>
+    <div class="clock-block">
+      <div id="clock"></div>
+      <div id="dateline"></div>
+    </div>
+  </div>
+
+  <!-- Weather -->
+  <div class="section-label">Conditions</div>
+  <div class="card">
+    <div class="card-label">Weather — Babylon, NY</div>
+    <div class="weather-main">
+      <div class="weather-icon">⛅</div>
+      <div>
+        <div class="weather-temp">62°</div>
+        <div class="weather-desc">Partly cloudy · Feels like 58°</div>
+        <div class="weather-badges" style="margin-top:8px;">
+          <span class="badge b-blue">NNW wind 15 mph</span>
+          <span class="badge b-blue">Humidity 55%</span>
+        </div>
+      </div>
+    </div>
+    <div class="weather-forecast">
+      <div class="wf-cell"><div class="wf-day">Sat</div><div class="wf-icon">⛅</div><div class="wf-temp">64°</div></div>
+      <div class="wf-cell"><div class="wf-day">Sun</div><div class="wf-icon">☁</div><div class="wf-temp">57°</div></div>
+      <div class="wf-cell"><div class="wf-day">Mon</div><div class="wf-icon">🌧</div><div class="wf-temp">52°</div></div>
+    </div>
+  </div>
+
+  <!-- Surf -->
+  <div class="card">
+    <div class="card-label">Surf — Jones Beach / Fire Island</div>
+    <div class="surf-stats">
+      <div class="surf-stat"><div class="surf-stat-val">1–2<span class="surf-stat-unit">ft</span></div><div class="surf-stat-lbl">Height</div></div>
+      <div class="surf-stat"><div class="surf-stat-val">7<span class="surf-stat-unit">s</span></div><div class="surf-stat-lbl">Period</div></div>
+      <div class="surf-stat"><div class="surf-stat-val" style="color:var(--high);">45°</div><div class="surf-stat-lbl">Water</div></div>
+      <div class="surf-stat"><div class="surf-stat-val" style="font-size:16px;color:var(--good);">NNW</div><div class="surf-stat-lbl">Wind</div></div>
+    </div>
+    <div class="surf-row"><span class="surf-row-label">Primary swell</span><span class="surf-row-val">SSE · 1–2 ft · 7 sec</span></div>
+    <div class="surf-row"><span class="surf-row-label">Wind</span><span class="surf-row-val">Offshore NNW · favorable &nbsp;<span class="badge b-green">Offshore</span></span></div>
+    <div class="surf-row"><span class="surf-row-label">Building swell</span><span class="surf-row-val">~3 ft / 10 sec · ~8 PM &nbsp;<span class="badge b-amber">Watch</span></span></div>
+    <div class="surf-row"><span class="surf-row-label">Surfcasting</span><span class="surf-row-val"><span class="badge b-green">Good today</span></span></div>
+    <div class="swell-forecast">
+      <div class="card-label" style="margin-bottom:8px;">3-day outlook</div>
+      <div class="swell-day"><span class="swell-day-name">Fri Apr 10</span><span class="swell-day-desc">1–2 ft / 7s · building to 3 ft tonight</span><span class="badge b-green">Good</span></div>
+      <div class="swell-day"><span class="swell-day-name">Sat Apr 11</span><span class="swell-day-desc">~3 ft / 10s SSE · offshore wind</span><span class="badge b-green">Best</span></div>
+      <div class="swell-day"><span class="swell-day-name">Sun Apr 12</span><span class="swell-day-desc">2–3 ft · winds shifting, some chop</span><span class="badge b-amber">Fair</span></div>
+    </div>
+    <div class="water-tip">Water temp ~45°F — waders + layers essential. Stripers staging inshore as temps approach 50°F. Bait: bunker, sand eels, clams.</div>
+  </div>
+
+  <!-- Tides -->
+  <div class="section-label">Tides — Fri, Apr 10</div>
+  <div class="card">
+    <div class="inlet-block">
+      <div class="inlet-name">Jones Inlet · Point Lookout</div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--high);">↑</span><span class="tide-dir-label h">HIGH</span><span class="tide-time-val">1:50 am</span><span class="tide-ht-val">3.31 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--low);">↓</span><span class="tide-dir-label l">LOW</span><span class="tide-time-val">8:31 am</span><span class="tide-ht-val">0.82 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--high);">↑</span><span class="tide-dir-label h">HIGH</span><span class="tide-time-val">2:32 pm</span><span class="tide-ht-val">2.79 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--low);">↓</span><span class="tide-dir-label l">LOW</span><span class="tide-time-val">8:36 pm</span><span class="tide-ht-val">1.08 ft</span></div>
+      <div class="sunrise-row"><span>☀ Rise 6:28 am</span><span>☀ Set 7:25 pm</span></div>
+    </div>
+    <div class="inlet-block">
+      <div class="inlet-name">Fire Island Inlet · Democrat Pt.</div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--high);">↑</span><span class="tide-dir-label h">HIGH</span><span class="tide-time-val">1:28 am</span><span class="tide-ht-val">2.40 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--low);">↓</span><span class="tide-dir-label l">LOW</span><span class="tide-time-val">8:28 am</span><span class="tide-ht-val">0.62 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--high);">↑</span><span class="tide-dir-label h">HIGH</span><span class="tide-time-val">2:10 pm</span><span class="tide-ht-val">2.03 ft</span></div>
+      <div class="tide-entry"><span class="tide-arrow" style="color:var(--low);">↓</span><span class="tide-dir-label l">LOW</span><span class="tide-time-val">8:33 pm</span><span class="tide-ht-val">0.79 ft</span></div>
+      <div class="sunrise-row"><span>Democrat Pt. runs ~20 min ahead of Jones Inlet</span></div>
+    </div>
+  </div>
+
+  <!-- Moon -->
+  <div class="section-label">Moon</div>
+  <div class="card">
+    <div class="moon-main">
+      <svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="28" fill="#b8cfe0"/>
+        <ellipse cx="38" cy="30" rx="22" ry="28" fill="#0a1628"/>
+        <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(26,140,255,0.2)" stroke-width="0.5"/>
+      </svg>
+      <div>
+        <div class="moon-phase-name">Last Quarter</div>
+        <div class="moon-illum">46% illuminated · 22.6 days old</div>
+        <div class="moon-badges">
+          <span class="badge b-teal">Rise 2:17 am</span>
+          <span class="badge b-teal">Set 11:10 am</span>
+        </div>
+      </div>
+    </div>
+    <div class="moon-cal" id="moon-cal"></div>
+    <div class="upcoming">
+      <div class="up-item"><div class="up-icon">🌑</div><div class="up-label">New Moon</div><div class="up-date">Apr 17</div></div>
+      <div class="up-item"><div class="up-icon">🌓</div><div class="up-label">First Qtr</div><div class="up-date">Apr 24</div></div>
+      <div class="up-item"><div class="up-icon">🌕</div><div class="up-label">Full Moon</div><div class="up-date">May 1</div></div>
+      <div class="up-item"><div class="up-icon">🌗</div><div class="up-label">Last Qtr</div><div class="up-date">May 8</div></div>
+    </div>
+    <div class="moon-tip">Pink Moon was Apr 1 · Next new moon Apr 17 — prime striper windows cluster around new &amp; full moons on moving tides</div>
+  </div>
+
+  <!-- To-do -->
+  <div class="section-label">To-do</div>
+  <div class="card">
+    <input class="todo-input" type="text" id="todo-input" placeholder="Add a task…" />
+    <ul class="todo-list" id="todo-list"></ul>
+    <button class="todo-add" onclick="document.getElementById('todo-input').focus()">+ add task</button>
+  </div>
+
+  <!-- Budget -->
+  <div class="section-label">Budget — April</div>
+  <div class="card">
+    <div id="budget-cats"></div>
+    <div class="budget-total">
+      <span class="budget-total-label">Total spent</span>
+      <span class="budget-total-val" id="total-spent"></span>
+    </div>
+  </div>
+
+  <!-- News -->
+  <div class="section-label">News</div>
+  <div class="card">
+    <div id="news-feed"></div>
+    <div class="news-actions">
+      <button class="news-btn" onclick="window.open('https://www.newsday.com','_blank')">More local news →</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// Clock
+function updateClock() {
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes();
+  document.getElementById('clock').textContent =
+    (h%12||12) + ':' + String(m).padStart(2,'0') + ' ' + (h>=12?'PM':'AM');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('dateline').textContent =
+    days[now.getDay()] + ' ' + months[now.getMonth()] + ' ' + now.getDate();
+}
+updateClock(); setInterval(updateClock, 15000);
+
+// Moon calendar
+const moonDays = [
+  {d:'10',i:'🌗',t:true},{d:'11',i:'🌘'},{d:'12',i:'🌘'},{d:'13',i:'🌘'},
+  {d:'14',i:'🌘'},{d:'15',i:'🌘'},{d:'16',i:'🌘'},{d:'17',i:'🌑'},
+  {d:'18',i:'🌒'},{d:'19',i:'🌒'},{d:'20',i:'🌒'},{d:'21',i:'🌒'},
+  {d:'22',i:'🌒'},{d:'23',i:'🌒'}
+];
+const cal = document.getElementById('moon-cal');
+moonDays.forEach(m => {
+  cal.innerHTML += `<div class="moon-day${m.t?' today':''}"><div class="md">${m.d}</div><div class="ms">${m.i}</div></div>`;
+});
+
+// Todos — persisted in localStorage
+const TODOS_KEY = 'surfcast_todos';
+let todos = JSON.parse(localStorage.getItem(TODOS_KEY) || 'null') || [
+  {text:'Check evening tide window — low 8:36 pm', done:false},
+  {text:'Re-spool braid on surf rod', done:false},
+  {text:'Pick up sand eels / bunker', done:false},
+  {text:'Grocery run', done:false},
+];
+function saveTodos() { localStorage.setItem(TODOS_KEY, JSON.stringify(todos)); }
+function renderTodos() {
+  const list = document.getElementById('todo-list'); list.innerHTML='';
+  todos.forEach((t,i) => {
+    const li = document.createElement('li');
+    li.className = 'todo-item' + (t.done?' done':'');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=t.done;
+    cb.onchange = () => { todos[i].done=cb.checked; saveTodos(); renderTodos(); };
+    const sp = document.createElement('span'); sp.textContent=t.text;
+    li.appendChild(cb); li.appendChild(sp); list.appendChild(li);
+  });
+}
+document.getElementById('todo-input').addEventListener('keydown', function(e) {
+  if (e.key==='Enter' && this.value.trim()) {
+    todos.push({text:this.value.trim(), done:false});
+    this.value=''; saveTodos(); renderTodos();
+  }
+});
+renderTodos();
+
+// Budget
+const budget = [
+  {cat:'Housing',   spent:1400, limit:1500, color:'#1a8cff'},
+  {cat:'Groceries', spent:320,  limit:400,  color:'#3dba7a'},
+  {cat:'Dining',    spent:210,  limit:200,  color:'#e85040'},
+  {cat:'Transport', spent:95,   limit:150,  color:'#e8a030'},
+  {cat:'Subs',      spent:48,   limit:60,   color:'#a07fd4'},
+];
+const bc = document.getElementById('budget-cats'); let total=0;
+budget.forEach(b => {
+  total += b.spent;
+  const pct = Math.min(100, Math.round(b.spent/b.limit*100));
+  bc.innerHTML += `<div class="budget-entry">
+    <div class="budget-meta"><span class="budget-name">${b.cat}</span><span class="budget-amt">$${b.spent} <span style="color:var(--text-dim)">/ $${b.limit}</span></span></div>
+    <div class="budget-bar-bg"><div class="budget-bar-fill" style="width:${pct}%;background:${b.color}"></div></div>
+  </div>`;
+});
+document.getElementById('total-spent').textContent = '$' + total.toLocaleString();
+
+// News
+const news = [
+  {title:'Fed signals two rate cuts possible before year-end', src:'Reuters', time:'2h', badge:'Finance', bc:'b-blue'},
+  {title:'Spring storm system tracks toward Northeast this weekend', src:'Weather.com', time:'3h', badge:'Weather', bc:'b-amber'},
+  {title:'Long Island property market sees renewed buyer activity', src:'Newsday', time:'5h', badge:'Local', bc:'b-green'},
+  {title:'Tech layoffs slow as hiring picks up in AI sector', src:'WSJ', time:'6h', badge:'Tech', bc:'b-blue'},
+];
+const nf = document.getElementById('news-feed');
+news.forEach(n => {
+  nf.innerHTML += `<div class="news-item">
+    <div class="news-title">${n.title}</div>
+    <div class="news-meta"><span class="badge ${n.bc}">${n.badge}</span>${n.src} · ${n.time} ago</div>
+  </div>`;
+});
+
+// PWA install prompt (Android/Chrome)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const banner = document.getElementById('install-banner');
+  banner.style.display = 'flex';
+  document.getElementById('install-btn').addEventListener('click', () => {
+    banner.style.display = 'none';
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; });
+  });
+});
+
+// iOS install tip
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.navigator.standalone;
+if (isIOS && !isStandalone) {
+  const tip = document.getElementById('ios-tip');
+  tip.style.display = 'block';
+  tip.innerHTML = '📲 To install: tap the <strong>Share</strong> button in Safari, then <strong>"Add to Home Screen"</strong>';
+}
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
